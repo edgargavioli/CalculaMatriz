@@ -4,56 +4,45 @@ namespace CalculadoraMatriz.Model
 {
     public class Matriz
     {
-        public int Linhas { get; private set; }
-        public int Colunas { get; private set; }
-        [DataMember]
-        public int[,] Valores { get; private set; }
+        public List<List<double>> Valores { get; private set; }
 
-        public Matriz(int linhas, int colunas, int[,] valores)
+        public Matriz(List<List<double>> valores)
         {
-            Linhas = linhas;
-            Colunas = colunas;
-            Valores = new int[linhas, colunas];
-            for (int i = 0; i < linhas; i++)
-            {
-                for (int j = 0; j < colunas; j++)
-                {
-                    Valores[i, j] = valores[i, j];
-                }
-            }
+           Valores = valores;
         }
 
-        public void MudarPosicao(int[,] matriz)
+        public void MudarPosicao(List<List<double>> matriz)
         {
-            for (int linha = 0; linha < matriz.Length; linha++)
+            for (int linha = 0; linha < matriz.Count; linha++)
             {
-                for (int coluna = 0; coluna < matriz.Length; coluna++)
+                for (int coluna = 0; coluna < matriz[linha].Count; coluna++)
                 {
-                    if (coluna > 0 && matriz[linha, coluna] == 0 && matriz[linha, coluna - 1] == 0)
+                    Console.WriteLine("Valores[linha][coluna]" + Valores[linha][coluna]+" "+linha+" "+coluna);
+                    if (coluna > 0 && matriz[linha][coluna] == 0 && matriz[linha][coluna - 1] == 0)
                     {
                         int para = coluna + 1;
-                        int temp = matriz[linha, coluna];
-                        matriz[linha, coluna] = matriz[linha, para];
-                        matriz[linha, para] = temp;
+                        double temp = matriz[linha][coluna];
+                        matriz[linha][coluna] = matriz[linha][para];
+                        matriz[linha][para] = temp;
                     }
-                    else if (coluna == 0 && matriz[linha, coluna] == 0)
+                    else if (coluna == 0 && matriz[linha][coluna] == 0)
                     {
                         int para = coluna + 1;
-                        int temp = matriz[linha, coluna];
-                        matriz[linha, coluna] = matriz[linha, para];
-                        matriz[linha, para] = temp;
+                        double temp = matriz[linha][coluna];
+                        matriz[linha][coluna] = matriz[linha][para];
+                        matriz[linha][para] = temp;
                     }
                 }
             }
         }
-        public void CalcTudo(int[,] matriz)
+        public void CalcTudo(List<List<double>> matriz)
         {
             MudarPosicao(matriz);
-            for (int lin = 1; lin < matriz.GetLength(0); lin++)
+            for (int lin = 1; lin < matriz.Count; lin++)
             {
                 for (int col = 0; col < lin; col++)
                 {
-                    if (matriz[lin, col] != 0)
+                    if (matriz[lin][col] != 0)
                     {
                         CalcLinha(lin, col, matriz);
                     }
@@ -62,35 +51,38 @@ namespace CalculadoraMatriz.Model
             CalcVariaveis(matriz);
         }
 
-        public void CalcLinha(int linha, int coluna, int[,] matriz)
+        public void CalcLinha(int linha, int coluna, List<List<double>> matriz)
         {
-            int resultadoMmc = Mmc(matriz[linha, coluna], matriz[coluna, coluna]);
-            int[,] matrizPcalculo = CriarMatrizAuxiliar(matriz);
-            int nl1 = resultadoMmc / matriz[coluna, coluna];
-            int nl2 = resultadoMmc / matriz[linha, coluna];
-            for (int i = 0; i < matriz.GetLength(1) + 1; i++)
+            double resultadoMmc = Mmc(matriz[linha][coluna], matriz[coluna][coluna]);
+            List<List<double>> matrizPcalculo = CriarMatrizAuxiliar(matriz);
+            double nl1 = resultadoMmc / matriz[coluna][coluna];
+            double nl2 = resultadoMmc / matriz[linha][coluna];
+            for (int i = 0; i < matriz.Count + 1; i++)
             {
-                matrizPcalculo[coluna, i] *= nl1;
-                matriz[linha, i] *= nl2;
+                matrizPcalculo[coluna][i] *= nl1;
+                matriz[linha][i] *= nl2;
             }
-            for (int i = 0; i < matriz.GetLength(1) + 1; i++)
+            for (int i = 0; i < matriz.Count + 1; i++)
             {
-                matriz[linha, i] = matrizPcalculo[coluna, i] - matriz[linha, i];
+                matriz[linha][i] = matrizPcalculo[coluna][i] - matriz[linha][i];
             }
         }
 
-        double[,] CalcVariaveis(int[,] matriz)
+        public void CalcVariaveis(List<List<double>> matriz)
         {
             string texto = "";
-            double[] variaveis = new double[matriz.GetLength(0)];
-            double[,] matrixAux = CriarMatrizAuxiliarDouble(matriz);
+            double[] variaveis = new double[matriz.Count];
             for (int i = 0; i < variaveis.Length; i++)
+            {
                 variaveis[i] = 1;
-            for (int i = 1; i <= matriz.GetLength(0); i++)
+            }
+            for (int i = 1; i <= matriz.Count; i++)
             {
                 for (int j = 1; j < i; j++)
-                    matrixAux[matriz.GetLength(0) - i, matriz.GetLength(0)] -= matriz[matriz.GetLength(0) - i, matriz.GetLength(0) - j] * variaveis[matriz.GetLength(0) - j];
-                    variaveis[matriz.GetLength(0) - i] = matriz[matriz.GetLength(0) - i, matriz.GetLength(0)] / matriz[matriz.GetLength(0) - i, matriz.GetLength(0) - i];
+                {
+                    matriz[matriz.Count - i][matriz.Count] = matriz[matriz.Count - i][matriz.Count] - matriz[matriz.Count - i][matriz.Count - j] * variaveis[matriz.Count - j];
+                    variaveis[matriz.Count - i] = matriz[matriz.Count - i][matriz.Count] / matriz[matriz.Count - i][matriz.Count - i];
+                }
             }
             for (int i = 1; i <= variaveis.Length; i++)
             {
@@ -104,39 +96,18 @@ namespace CalculadoraMatriz.Model
                 }
             }
             Console.WriteLine(texto);
-            return matrixAux;
         }
 
-        int[,] CriarMatrizAuxiliar(int[,] matriz)
+        List<List<double>> CriarMatrizAuxiliar(List<List<double>> matriz)
         {
-            int[,] matrizAuxiliar = new int[matriz.GetLength(0), matriz.GetLength(1)];
-            for (int linha = 0; linha < matriz.GetLength(0); linha++)
-            {
-                for (int coluna = 0; coluna < matriz.GetLength(1); coluna++)
-                {
-                    matrizAuxiliar[linha, coluna] = matriz[linha, coluna];
-                }
-            }
+            List<List<double>> matrizAuxiliar = matriz;
             return matrizAuxiliar;
         }
 
-        double[,] CriarMatrizAuxiliarDouble(int[,] matriz)
-        {
-            double[,] matrizAuxiliar = new double[matriz.GetLength(0), matriz.GetLength(1)];
-            for (int linha = 0; linha < matriz.GetLength(0); linha++)
-            {
-                for (int coluna = 0; coluna < matriz.GetLength(1); coluna++)
-                {
-                    matrizAuxiliar[linha, coluna] = matriz[linha, coluna];
-                }
-            }
-            return matrizAuxiliar;
-        }
-
-        int Mmc(int valorMatriz1, int valorMatriz2)
+        double Mmc(double valorMatriz1, double valorMatriz2)
         {
             int mmc = 1;
-            int maior;
+            double maior;
             if (valorMatriz1 < 0)
             {
                 valorMatriz1 *= -1;
